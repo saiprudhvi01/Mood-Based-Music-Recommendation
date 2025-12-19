@@ -286,12 +286,21 @@ def listen_and_recognize():
     max_attempts = 3
     
     try:
+        # Check if PyAudio is available
+        try:
+            import pyaudio
+        except ImportError:
+            return {"success": False, "error": "Voice recognition requires PyAudio. Please install it locally or use text input."}
+        
         recognizer = sr.Recognizer()
         
         # Check for available microphones
-        mics = sr.Microphone.list_microphone_names()
-        if not mics:
-            return {"success": False, "error": "No microphones found. Please check your microphone settings."}
+        try:
+            mics = sr.Microphone.list_microphone_names()
+            if not mics:
+                return {"success": False, "error": "No microphones found. Please check your microphone settings or use text input."}
+        except:
+            return {"success": False, "error": "Microphone access not available on this server. Please use text input."}
         
         print(f"Available microphones: {mics}")
         

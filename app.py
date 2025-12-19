@@ -333,7 +333,7 @@ def listen_and_recognize():
                                 if attempt < max_attempts - 1:
                                     continue
                                 else:
-                                    return {"success": False, "error": "Speech not clear after multiple attempts. Please:\n1. Speak louder and clearer\n2. Reduce background noise\n3. Position microphone closer\n4. Try typing instead"}
+                                    return {"success": False, "error": "Speech not clear after multiple attempts. Please:\n1. Speak louder and clearer\n2. Reduce background noise\n3. Try typing instead"}
                                 
                         except sr.RequestError as e:
                             print(f"Google API error: {str(e)}")
@@ -347,7 +347,7 @@ def listen_and_recognize():
                                     return {"success": False, "error": "Sphinx recognition failed. Please try again."}
                             except:
                                 # If both methods fail, provide helpful error
-                                return {"success": False, "error": f"Speech recognition service unavailable. This could be due to:\n1. No internet connection\n2. Google API down\n3. Firewall blocking requests\n\n💡 Solutions:\n• Check internet connection\n• Try using text input instead\n• Wait and try again later"}
+                                return {"success": False, "error": "Speech recognition service unavailable. Please try again."}
                             
                     except sr.WaitTimeoutError:
                         print(f"Attempt {attempt + 1} timeout")

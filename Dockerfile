@@ -1,13 +1,5 @@
 FROM python:3.13-slim
 
-# Install system dependencies for PyAudio
-RUN apt-get update && apt-get install -y \
-    libportaudio2 \
-    libportaudiocpp0 \
-    portaudio19-dev \
-    gcc \
-    && rm -rf /var/lib/apt/lists/*
-
 # Set working directory
 WORKDIR /app
 

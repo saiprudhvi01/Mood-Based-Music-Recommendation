@@ -7,3 +7,4 @@ SpeechRecognition>=3.10.0,<4.0.0
 # Visit: https://www.lfd.uci.edu/~gohlke/pythonlibs/#pyaudio
 # Or try: pip install pipwin && pipwin install pyaudio
 PyAudio>=0.2.11,<0.3.0
+speechrecognition>=3.10.4

@@ -3,7 +3,4 @@ Werkzeug>=3.0.0,<4.0.0
 Flask-SQLAlchemy>=3.0.0,<4.0.0
 Flask-Login>=0.6.0,<1.0.0
 SpeechRecognition>=3.10.0,<4.0.0
-# PyAudio installation note: On Windows, you may need to install from wheel files
-# Visit: https://www.lfd.uci.edu/~gohlke/pythonlibs/#pyaudio
-# Or try: pip install pipwin && pipwin install pyaudio
 PyAudio>=0.2.11,<0.3.0

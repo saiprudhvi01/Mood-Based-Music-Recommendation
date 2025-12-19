@@ -1,0 +1,57 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Mood-Based Music Recommendation</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+
+<div class="disco-lights">
+    <div class="light-beam"></div>
+    <div class="light-beam"></div>
+    <div class="light-beam"></div>
+    <div class="light-beam"></div>
+    <div class="light-beam"></div>
+    <div class="light-beam"></div>
+</div>
+
+<div class="container">
+    <h1> Mood-Based Music Recommendation </h1>
+
+    <form method="POST">
+        <textarea name="text" placeholder="Type how you are feeling..." required>{{ user_text }}</textarea>
+        <button type="submit">Analyze Mood</button>
+    </form>
+
+    {% if mood %}
+    <div class="result">
+        <h2>Detected Mood: <span>{{ mood }}</span></h2>
+        <h3>Recommended Genres:</h3>
+        <p>{{ genres }}</p>
+        <h3>Available Songs:</h3>
+        <div class="songs-list">
+            {% for song in songs %}
+            <div class="song-item">
+                <p>{{ song }}</p>
+                {% if music_files and music_files[loop.index0] %}
+                <audio controls>
+                    <source src="{{ music_files[loop.index0] }}" type="audio/mpeg">
+                    Your browser does not support the audio element.
+                </audio>
+                {% else %}
+                <span class="no-audio">Audio file not available</span>
+                {% endif %}
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% endif %}
+</div>
+
+<div class="music-notes">
+    <div class="note"></div>
+</div>
+
+</body>
+</html>

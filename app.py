@@ -7,6 +7,11 @@ import speech_recognition as sr
 import random
 import string
 import os
+import google.generativeai as genai
+from dotenv import load_dotenv
+
+# Load environment variables from .env file
+load_dotenv()
 
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'your-secret-key-change-this-in-production'
@@ -280,6 +285,62 @@ def detect_mood(text):
     
     # Low confidence - return Neutral
     return "Neutral"
+
+# ---------- Gemini AI Configuration ----------
+# Configure Gemini API
+GEMINI_API_KEY = os.getenv('GEMINI_API_KEY')
+if not GEMINI_API_KEY:
+    raise ValueError("GEMINI_API_KEY environment variable is not set")
+genai.configure(api_key=GEMINI_API_KEY)
+
+# Function to get a free model that supports generateContent
+def get_available_model():
+    try:
+        models = genai.list_models()
+        # Prioritize officially supported models for generateContent
+        supported_models = [
+            'models/gemini-2.5-flash',
+            'models/gemini-2.5-flash-lite',
+            'models/gemini-2.5-pro',
+            'models/gemini-2.0-flash',
+            'models/gemini-2.0-flash-lite'
+        ]
+        for model in models:
+            if model.name in supported_models and 'generateContent' in model.supported_generation_methods:
+                return model.name
+        # Fallback to any model supporting generateContent
+        for model in models:
+            if 'generateContent' in model.supported_generation_methods:
+                return model.name
+        raise ValueError("No suitable model found that supports generateContent")
+    except Exception as e:
+        raise ValueError(f"Error listing models: {str(e)}")
+
+def get_chatbot_response(user_message, user_mood=None):
+    """Get response from Gemini AI chatbot"""
+    try:
+        model_name = get_available_model()
+        model = genai.GenerativeModel(model_name)
+        
+        # Create context-aware prompt
+        context_prompt = f"""
+You are a helpful and empathetic AI assistant for a mood-based music recommendation app. 
+Your role is to:
+1. Provide emotional support and understanding
+2. Suggest music based on the user's mood
+3. Engage in friendly conversation
+4. Offer positive encouragement
+
+Current user mood: {user_mood if user_mood else 'Unknown'}
+User message: {user_message}
+
+Please provide a caring, supportive response that acknowledges their feelings and suggests appropriate music or activities. Keep your response conversational and warm (under 150 words).
+"""
+        
+        response = model.generate_content(context_prompt)
+        return response.text
+    except Exception as e:
+        return f"I'm having trouble connecting right now. Please try again later. Error: {str(e)}"
 
 # ---------- Voice Recognition ----------
 def listen_and_recognize():
@@ -580,6 +641,36 @@ def index():
         user_text=user_text
     )
 
+@app.route("/chatbot", methods=["POST"])
+@login_required
+def chatbot():
+    try:
+        user_message = request.json.get("message", "").strip()
+        
+        if not user_message:
+            return jsonify({
+                "success": False,
+                "error": "Message cannot be empty"
+            })
+        
+        # Detect mood from user message for context
+        user_mood = detect_mood(user_message)
+        
+        # Get chatbot response
+        bot_response = get_chatbot_response(user_message, user_mood)
+        
+        return jsonify({
+            "success": True,
+            "response": bot_response,
+            "detected_mood": user_mood
+        })
+        
+    except Exception as e:
+        return jsonify({
+            "success": False,
+            "error": f"Chatbot error: {str(e)}"
+        })
+
 @app.route("/music/<mood>/<filename>")
 def serve_music(mood, filename):
     music_dir = os.path.join(os.path.dirname(__file__), 'music', mood)
@@ -589,5 +680,5 @@ if __name__ == "__main__":
     with app.app_context():
         db.create_all()
     import os
-    port = int(os.environ.get('PORT', 5000))
+    port = int(os.environ.get('PORT', 8080))
     app.run(host='0.0.0.0', port=port, debug=False)

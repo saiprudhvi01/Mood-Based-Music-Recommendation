@@ -22,6 +22,7 @@
         <div class="auth-nav">
             <span>Welcome, {{ current_user.username }}!</span>
             <a href="{{ url_for('history') }}">History</a>
+            <button id="chatbot-nav-btn" class="chatbot-nav-btn">🤖 Chat</button>
             <a href="{{ url_for('logout') }}">Logout</a>
         </div>
     </div>
@@ -77,6 +78,30 @@
         </div>
     </div>
     {% endif %}
+</div>
+
+<!-- Chatbot Modal -->
+<div class="chatbot-modal" id="chatbot-modal">
+    <div class="chatbot-modal-content">
+        <div class="chatbot-modal-header">
+            <span>🤖 Mood Assistant</span>
+            <button class="chatbot-close" id="chatbot-close">×</button>
+        </div>
+        <div class="chatbot-messages" id="chatbot-messages">
+            <div class="message bot-message">
+                Hi! I'm your mood assistant. How are you feeling today? I can help with music recommendations and emotional support! 😊
+            </div>
+        </div>
+        <div class="chatbot-input-container">
+            <input type="text" id="chatbot-input" placeholder="Type your message..." maxlength="500">
+            <button id="chatbot-send">Send</button>
+        </div>
+        <div class="chatbot-typing" id="chatbot-typing" style="display: none;">
+            <span></span>
+            <span></span>
+            <span></span>
+        </div>
+    </div>
 </div>
 
 <div class="music-notes">
@@ -220,6 +245,91 @@ document.addEventListener('DOMContentLoaded', function() {
         
         moodForm.parentNode.insertBefore(resultDiv, moodForm.nextSibling);
     }
+
+    // Chatbot functionality
+    const chatbotNavBtn = document.getElementById('chatbot-nav-btn');
+    const chatbotModal = document.getElementById('chatbot-modal');
+    const chatbotClose = document.getElementById('chatbot-close');
+    const chatbotMessages = document.getElementById('chatbot-messages');
+    const chatbotInput = document.getElementById('chatbot-input');
+    const chatbotSend = document.getElementById('chatbot-send');
+    const chatbotTyping = document.getElementById('chatbot-typing');
+
+    // Open chatbot modal
+    chatbotNavBtn.addEventListener('click', function() {
+        chatbotModal.style.display = 'flex';
+        chatbotInput.focus();
+    });
+
+    // Close chatbot modal
+    chatbotClose.addEventListener('click', function() {
+        chatbotModal.style.display = 'none';
+    });
+
+    // Close modal when clicking outside
+    window.addEventListener('click', function(event) {
+        if (event.target === chatbotModal) {
+            chatbotModal.style.display = 'none';
+        }
+    });
+
+    // Send message function
+    async function sendMessage() {
+        const message = chatbotInput.value.trim();
+        if (!message) return;
+
+        // Add user message to chat
+        addMessage(message, 'user');
+        chatbotInput.value = '';
+
+        // Show typing indicator
+        chatbotTyping.style.display = 'flex';
+        chatbotSend.disabled = true;
+
+        try {
+            const response = await fetch('/chatbot', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ message: message })
+            });
+
+            const result = await response.json();
+
+            if (result.success) {
+                addMessage(result.response, 'bot');
+            } else {
+                addMessage(`Sorry, I encountered an error: ${result.error}`, 'bot');
+            }
+        } catch (error) {
+            console.error('Chatbot error:', error);
+            addMessage('Sorry, I\'m having trouble connecting. Please try again later.', 'bot');
+        } finally {
+            chatbotTyping.style.display = 'none';
+            chatbotSend.disabled = false;
+        }
+    }
+
+    // Add message to chat
+    function addMessage(text, sender) {
+        const messageDiv = document.createElement('div');
+        messageDiv.className = `message ${sender}-message`;
+        messageDiv.textContent = text;
+        chatbotMessages.appendChild(messageDiv);
+        
+        // Scroll to bottom
+        chatbotMessages.scrollTop = chatbotMessages.scrollHeight;
+    }
+
+    // Event listeners for sending messages
+    chatbotSend.addEventListener('click', sendMessage);
+    chatbotInput.addEventListener('keypress', function(e) {
+        if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault();
+            sendMessage();
+        }
+    });
 });
 </script>
 
